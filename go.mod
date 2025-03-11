@@ -3,7 +3,7 @@ module github.com/FlowingSPDG/mcp-vmix
 go 1.23.1
 
 require (
-	github.com/FlowingSPDG/vmix-go v0.2.4-0.20250311111738-1ba9e02a11b8
+	github.com/FlowingSPDG/vmix-go v0.2.4-0.20250311121757-85cb7179d81d
 	github.com/metoro-io/mcp-golang v0.8.0
 	github.com/samber/lo v1.49.1
 	golang.org/x/image v0.25.0

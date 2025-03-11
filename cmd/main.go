@@ -150,6 +150,11 @@ func main() {
 		return
 	}
 
+	if err := server.RegisterTool("vmix_adjust_layers", "Adjust layers of a vMix instance. This is used to adjust the layers of a vMix instance. It is always recommended to use this for Blank Input.", vmixInstance.AdjustLayers); err != nil {
+		log.Error(fmt.Sprintf("Failed to register vmix_adjust_layers tool: %v", err))
+		return
+	}
+
 	log.Info("Starting MCP server...")
 	if err := server.Serve(); err != nil {
 		log.Error(fmt.Sprintf("Failed to start MCP server: %v", err))

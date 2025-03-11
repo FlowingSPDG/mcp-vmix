@@ -4,6 +4,8 @@ github.com/FlowingSPDG/vmix-go v0.2.4-0.20250311105926-e657156b87ba h1:HZGx9xuqG
 github.com/FlowingSPDG/vmix-go v0.2.4-0.20250311105926-e657156b87ba/go.mod h1:zIdo0t6eFonrnmqYpKreos3snEa/OHO3PMkNKkuaU88=
 github.com/FlowingSPDG/vmix-go v0.2.4-0.20250311111738-1ba9e02a11b8 h1:7VD5zTZnGfAAhdcx77S06ndyILlnwMdP21eFs96w0s4=
 github.com/FlowingSPDG/vmix-go v0.2.4-0.20250311111738-1ba9e02a11b8/go.mod h1:zIdo0t6eFonrnmqYpKreos3snEa/OHO3PMkNKkuaU88=
+github.com/FlowingSPDG/vmix-go v0.2.4-0.20250311121757-85cb7179d81d h1:PM01V0kBsotDrMaHdjUevmnmCoHA1irApP1hhD5/V14=
+github.com/FlowingSPDG/vmix-go v0.2.4-0.20250311121757-85cb7179d81d/go.mod h1:zIdo0t6eFonrnmqYpKreos3snEa/OHO3PMkNKkuaU88=
 github.com/bahlo/generic-list-go v0.2.0 h1:5sz/EEAK+ls5wF+NeqDpk5+iNdMDXrh3z3nPnH1Wvgk=
 github.com/bahlo/generic-list-go v0.2.0/go.mod h1:2KvAjgMlE5NNynlg/5iLrrCCZ2+5xWbdbCW3pNTGyYg=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=

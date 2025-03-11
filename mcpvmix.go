@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -66,6 +67,7 @@ type MCPvMix interface {
 	CheckScreenshot(arguments CheckScreenshotArguments) (*mcp_golang.ToolResponse, error)
 	CheckScreenshotInput(arguments CheckScreenshotInputArguments) (*mcp_golang.ToolResponse, error)
 	MakeScene(arguments MakeSceneArguments) (*mcp_golang.ToolResponse, error)
+	AdjustLayers(arguments AdjustLayersArguments) (*mcp_golang.ToolResponse, error)
 }
 
 type mcpVmix struct {
@@ -86,7 +88,13 @@ func (m *mcpVmix) FetchVMix(arguments ConnectVmixArguments) (*mcp_golang.ToolRes
 	m.logger.Info(fmt.Sprintf("Successfully connected to vMix instance at %s:%d", arguments.IP, arguments.Port))
 
 	inputs := lo.Map(vmix.Inputs.Input, func(input models.Input, _ int) *mcp_golang.Content {
-		return mcp_golang.NewTextContent(fmt.Sprintf("Input Number: %d, Name: %s. State: %s, Position: %d, Duration: %d, Loop: %t", input.Number, input.Name, input.State, input.Position, input.Duration, input.Loop))
+		overlays := lo.Map(input.Overlay, func(overlay models.InputOverlay, _ int) string {
+			return fmt.Sprintf("Overlay: %d: Text: %s Key: %s Positions:%v", overlay.Index, overlay.Text, overlay.Key, overlay.Position)
+		})
+		overlaysStr := strings.Join(overlays, "\n")
+		return mcp_golang.NewTextContent(
+			fmt.Sprintf("Input: %d: Key:%s, Name: %s. State: %s, Position: %d, Duration: %d, Loop: %t Overlays:%v", input.Number, input.Key, input.Name, input.State, input.Position, input.Duration, input.Loop, overlaysStr),
+		)
 	})
 
 	allContents := append([]*mcp_golang.Content{
@@ -663,6 +671,80 @@ func (m *mcpVmix) MakeScene(arguments MakeSceneArguments) (*mcp_golang.ToolRespo
 	m.logger.Info(fmt.Sprintf("シーン %s の作成に成功しました", arguments.Input))
 
 	return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(fmt.Sprintf("シーン %s を作成しました", arguments.Input))), nil
+}
+
+// AdjustLayers implements MCPvMix.
+func (m *mcpVmix) AdjustLayers(arguments AdjustLayersArguments) (*mcp_golang.ToolResponse, error) {
+	m.logger.Info(fmt.Sprintf("レイヤーを調整します。vMixインスタンス %s:%d", arguments.IP, arguments.Port))
+
+	vmix, err := vmixhttp.NewClient(arguments.IP, arguments.Port)
+	if err != nil {
+		errMsg := fmt.Sprintf("vMixインスタンスへの接続に失敗しました: %v", err)
+		m.logger.Error(errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+
+	// 各レイヤーを設定
+	eg := errgroup.Group{}
+	for index, layer := range arguments.Layers {
+		eg.Go(func() error {
+			eg.Go(func() error {
+				if err := vmix.SetLayer(arguments.Input, uint8(layer.Index), layer.Input); err != nil {
+					errMsg := fmt.Sprintf("failed to set input layer for index:%d input: %s: error: %v", index+1, arguments.Input, err)
+					m.logger.Error(errMsg)
+					return xerrors.Errorf(errMsg)
+				}
+				return nil
+			})
+
+			eg.Go(func() error {
+				if err := vmix.SetLayerPanX(arguments.Input, uint8(layer.Index), layer.PanX); err != nil {
+					errMsg := fmt.Sprintf("failed to set input layer for index:%d input: %s: error: %v", index+1, arguments.Input, err)
+					m.logger.Error(errMsg)
+					return xerrors.Errorf(errMsg)
+				}
+				return nil
+			})
+
+			eg.Go(func() error {
+				if err := vmix.SetLayerPanY(arguments.Input, uint8(layer.Index), layer.PanY); err != nil {
+					errMsg := fmt.Sprintf("failed to set input layer position for index:%d input: %s: error: %v", index+1, arguments.Input, err)
+					m.logger.Error(errMsg)
+					return xerrors.Errorf(errMsg)
+				}
+				return nil
+			})
+
+			eg.Go(func() error {
+				if err := vmix.SetLayerZoom(arguments.Input, uint8(layer.Index), layer.Zoom); err != nil {
+					errMsg := fmt.Sprintf("failed to set input layer zoom for index:%d input: %s: error: %v", index+1, arguments.Input, err)
+					m.logger.Error(errMsg)
+					return xerrors.Errorf(errMsg)
+				}
+				return nil
+			})
+
+			eg.Go(func() error {
+				if err := vmix.SetLayerCrop(arguments.Input, uint8(layer.Index), layer.CropX1, layer.CropY1, layer.CropX2, layer.CropY2); err != nil {
+					errMsg := fmt.Sprintf("failed to set input layer crop for index:%d input: %s: error: %v", index+1, arguments.Input, err)
+					m.logger.Error(errMsg)
+					return xerrors.Errorf(errMsg)
+				}
+				return nil
+			})
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		errMsg := fmt.Sprintf("failed to set input layer: %v", err)
+		m.logger.Error(errMsg)
+		return nil, fmt.Errorf(errMsg)
+	}
+
+	m.logger.Info(fmt.Sprintf("レイヤーを調整しました"))
+	return mcp_golang.NewToolResponse(mcp_golang.NewTextContent("レイヤーを調整しました")), nil
 }
 
 func NewMCPvMix(logger logger.Logger) MCPvMix {
